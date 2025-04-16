@@ -12,7 +12,7 @@ resource "helm_release" "cert-manager" {
 }
 
 resource "kubernetes_manifest" "cluster_issuer" {
-  count = var.create ? 1 : 0  
+  count = var.create_clusterIssuer ? 1 : 0  
   
   depends_on = [helm_release.cert-manager]
 
