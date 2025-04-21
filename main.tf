@@ -11,34 +11,25 @@ resource "helm_release" "cert-manager" {
   }
 }
 
-resource "kubernetes_manifest" "cluster_issuer" {
+resource "kubectl_manifest" "cluster_issuer" {
   count = var.create_clusterIssuer ? 1 : 0  
   
   depends_on = [helm_release.cert-manager]
 
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
-    metadata = {
-      name = var.clusterIssuer_name
-    }
-    spec = {
-      acme = {
-        email  = var.letsencrypt_email
-        server = var.acme_server_url
-        privateKeySecretRef = {
-          name = var.private_key_secret_name
-        }
-        solvers = [
-          {
-            http01 = {
-              ingress = {
-                ingressClassName = var.ingress_class
-              }
-            }
-          }
-        ]
-      }
-    }
-  }
+  yaml_body = <<-YAML
+    apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
+      name: ${var.clusterIssuer_name}
+    spec:
+      acme:
+        server: ${var.acme_server_url}
+        email: ${var.letsencrypt_email}
+        privateKeySecretRef:
+          name: ${var.private_key_secret_name}
+        solvers:
+          - http01:
+              ingress:
+                ingressClassName: ${var.ingress_class}
+  YAML
 }
